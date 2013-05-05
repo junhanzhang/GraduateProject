@@ -11,7 +11,7 @@
 	include('simple_html_dom.php');
 	$html = new simple_html_dom();
 	$html->load_file('cleaned.htm');
-	$conf = parse_ini_file(".\Conf\sina.ini", true);
+	$conf = parse_ini_file(".\conf\sina.ini", true);
 	
 	//微博作者是统一的
 	$str_author = $conf['AUTHOR']['BEGIN'];
