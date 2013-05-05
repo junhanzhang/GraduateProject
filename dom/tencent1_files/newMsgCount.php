@@ -1,0 +1,1 @@
+MI.newCountShow({"result":0,"msg":"","info":[{"type":4,"value":[0,0,0]},{"type":1,"value":1},{"type":19,"value":6},{"type":13,"value":0},{"type":38,"value":0},{"type":39,"value":0},{"type":2,"value":0},{"type":20,"value":0,"value2":0}],"user":"juhanzhang","time":1367681666});
