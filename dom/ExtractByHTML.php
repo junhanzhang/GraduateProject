@@ -74,7 +74,7 @@
 		$xml .= "
 ".str_repeat(" ", $indent+4)."</record>";
 		
-//		echo "<br /><br /><br /><br /><br /><br />";
+//		test;
 	}
 	
 	
