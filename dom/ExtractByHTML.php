@@ -7,7 +7,7 @@
 	</head>
 	<body style="margin:0 0 0 0;">
 	<?php
-
+	//test
 	include('simple_html_dom.php');
 	$html = new simple_html_dom();
 	$html->load_file('cleaned.htm');
