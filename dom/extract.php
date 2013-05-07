@@ -8,6 +8,14 @@
 	<body style="margin:0 0 0 0;">
 	<?php
 
+	//判断是否转义字符
+	function isEscapeCharacter($str) {
+		if ($str[0] == 't' || $str[0] == 'n') {
+			return true;
+		} else {
+			return false;
+		}
+	}
 	function deleteTag($node) {
 		//删除font、style、script、备注标签
 		if ($node->tag == 'font' || $node->tag == 'style' || $node->tag == 'script' || $node->tag == 'comment' || $node->tag == 'param' || $node->tag == 'img') {
@@ -106,7 +114,9 @@
 
 //	================================我是分割线================================	
 //	下面为生成xml文件
-	function generateXML($html, $conf_path) {
+//$html为清洗后的字符串载入的DOM对象，$save_path为生成XML文件保存路径
+//$file_only_name为XML文件保存名（不包含扩展名），$conf_path为配置文件路径
+	function generateXML($html, $save_path, $file_only_name, $conf_path) {
 		
 		//".\conf\\netease.ini"	".\conf\\tencent.ini"
 		$conf = parse_ini_file($conf_path, true);
@@ -176,8 +186,14 @@
 		
 		$xml .= "
 </Microblog>";
-		echo $xml;
-		$fp = fopen("temp.xml", "w+");
+//		echo $xml;
+		if (isEscapeCharacter($file_only_name)) {
+			$full_save_path = $save_path.'\\\\'.$file_only_name.'.xml';
+		} else {
+			$full_save_path = $save_path.'\\'.$file_only_name.'.xml';
+		}
+		echo $full_save_path;
+		$fp = fopen($full_save_path, "w+");
 		fputs($fp, $xml);
 		fclose($fp);
 	}
@@ -189,7 +205,7 @@
 		alert('请选择抽取的微博');
 	}
 //	配置文件路径\会转义要多加一个\
-	if ($microblog[0] == 't' || $microblog[0] == 'n') {
+	if (isEscapeCharacter($microblog)) {
 		$conf_path = '.\conf\\\\'.$microblog.'.ini';
 	} else {
 		$conf_path = '.\conf\\'.$microblog.'.ini';
@@ -207,20 +223,35 @@
 //	开始循环处理
 	$dir = opendir($file_path);
 	while (($file_name = readdir($dir)) !== false) {
-		echo $file_path.'\\'.$file_name;
-		echo '<br />';
+		//readdir前两个返回的是.和..
+		if ($file_name != '.' && $file_name != '..') {
 
-/* 		$html->load_file($file_name);
+			$path_info = pathinfo($file_name);
+
+			//过滤只抽取指定后缀名文件
+			if (isset($path_info['extension']) && ($path_info['extension'] == 'htm' || $path_info['extension'] == 'html' || $path_info['extension'] == 'xml')) {
+				//防止转义字符影响
+				if (isEscapeCharacter($file_name)) {
+					$full_path = $file_path.'\\\\'.$file_name;
+				} else {
+					$full_path = $file_path.'\\'.$file_name;
+				}
+//				echo $full_path;
+//				echo '<br />';
+				$html->load_file($full_path);
 		
-		$div = $html->find('body',0);
-	//	$div->outertext = iconv("GBK", "UTF-8", $div->outertext);
-		$indent = 0;
-		cleanHTML($div, $indent);
-		
-	//	通过字符串重新载入清洗后的DOM对象
-		$html->load($div);
-		generateXML($html, $conf_path); */
+				$div = $html->find('body',0);
+			//	$div->outertext = iconv("GBK", "UTF-8", $div->outertext);
+				$indent = 0;
+				cleanHTML($div, $indent);
+				
+			//	通过字符串重新载入清洗后的DOM对象
+				$html->load($div);
+				generateXML($html, $file_path, $path_info['filename'], $conf_path);
+			}
+		}
 	}
+
 	//	file_put_contents("cleaned.htm", $xml);
 	?>
 	</body>
