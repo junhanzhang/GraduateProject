@@ -10,7 +10,7 @@
 
 	include('simple_html_dom.php');
 	$html = new simple_html_dom();
-	$html->load_file('twitter.htm');
+	$html->load_file('..\..\data\netease\\netease1.htm');
 
 	function deleteTag($node) {
 		//删除font、style、script、备注标签

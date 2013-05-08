@@ -8,13 +8,44 @@
 	<body style="margin:0 0 0 0;">
 	<?php
 
+		if (isset($_POST["microblog"])) {
+		$microblog = $_POST["microblog"];
+	} else {
+		$microblog = NULL;
+		alert('请选择抽取的微博');
+	}
+//	配置文件路径\会转义要多加一个\
+	$conf_path = correctPath('.\conf\\'.$microblog.'.ini');
+/* 	if (correctPath($microblog)) {
+		$conf_path = '.\conf\\\\'.$microblog.'.ini';
+	} else {
+		$conf_path = '.\conf\\'.$microblog.'.ini';
+	} */
+//	数据目录
+	if (isset($_POST["dir_path"]) && $_POST["dir_path"] != NULL) {
+		$file_path = $_POST["dir_path"];
+	} else {
+		$conf = parse_ini_file($conf_path, true);
+		$file_path = $conf['FILE_PATH']['PATH'];
+	}
+//	输出目录	
+	if (isset($_POST['output_path']) && $_POST["output_path"] != NULL) {
+		$output_path = rtrim($_POST['output_path'], '\\');
+	} else {
+		$output_path = $file_path;
+	}
+//	echo $output_path;
+//	生成目录
+	$temp = correctPath($output_path.'\\extract');
+	if (!is_dir($temp))
+		mkdir($temp); 
+//	函数================================我是分割线================================ 
 	//判断是否转义字符
-	function isEscapeCharacter($str) {
-		if ($str[0] == 't' || $str[0] == 'n') {
-			return true;
-		} else {
-			return false;
-		}
+	function correctPath($str) {
+		$temp = $str;
+		$temp = str_ireplace("\\t", "\\\\t", $temp);
+
+		return str_ireplace("\\n", "\\\\n", $temp);
 	}
 	function deleteTag($node) {
 		//删除font、style、script、备注标签
@@ -143,10 +174,22 @@
 		//腾讯微博需要清洗转发博文（与正博文相同标签）
 		if ($conf['POST']['CLEAN'] != NULL) {
 			$clean = $html->find($conf['POST']['CLEAN']);
-			foreach ($clean as $item) {
-				$item->outertext = '';
+			for ($j = 0; $j < count($clean); $j++) {
+				$clean[$j]->outertext = '';
+//				echo $clean[$j]->plaintext;
+				echo '<br />';
+				
 			}
+//			echo '<XMP>'.$clean['0']->plaintext.'</XMP>';
+
+			/* foreach ($clean as $item) {
+				
+				$item->outertext = '';
+				echo $item->plaintext;
+				echo '<br />';
+			} */
 		}
+		echo '<XMP>'.$html.'</XMP>';
 		$str_post = $conf['POST']['BEGIN'];
 		if ($conf['POST']['START'] != NULL) {
 			$str_post .= " ".$conf['POST']['START'];
@@ -187,41 +230,25 @@
 		$xml .= "
 </Microblog>";
 //		echo $xml;
-		if (isEscapeCharacter($file_only_name)) {
+		$full_save_path = correctPath($save_path.'\\extract\\'.$file_only_name.'.xml');
+/* 		if (correctPath($file_only_name)) {
 			$full_save_path = $save_path.'\\\\'.$file_only_name.'.xml';
 		} else {
 			$full_save_path = $save_path.'\\'.$file_only_name.'.xml';
-		}
-		echo $full_save_path;
+		} */
+//		echo $full_save_path;
+		
 		$fp = fopen($full_save_path, "w+");
 		fputs($fp, $xml);
 		fclose($fp);
 	}
 
-	if (isset($_POST["microblog"])) {
-		$microblog = $_POST["microblog"];
-	} else {
-		$microblog = NULL;
-		alert('请选择抽取的微博');
-	}
-//	配置文件路径\会转义要多加一个\
-	if (isEscapeCharacter($microblog)) {
-		$conf_path = '.\conf\\\\'.$microblog.'.ini';
-	} else {
-		$conf_path = '.\conf\\'.$microblog.'.ini';
-	}
-//	数据目录
-	if (isset($_POST["dir_path"]) && $_POST["dir_path"] != NULL) {
-		$file_path = $_POST["dir_path"];
-	} else {
-		$conf = parse_ini_file($conf_path, true);
-		$file_path = $conf['FILE_PATH']['PATH'];
-	}
-
+		
 	include('simple_html_dom.php');
 	$html = new simple_html_dom();
 //	开始循环处理
 	$dir = opendir($file_path);
+
 	while (($file_name = readdir($dir)) !== false) {
 		//readdir前两个返回的是.和..
 		if ($file_name != '.' && $file_name != '..') {
@@ -231,11 +258,12 @@
 			//过滤只抽取指定后缀名文件
 			if (isset($path_info['extension']) && ($path_info['extension'] == 'htm' || $path_info['extension'] == 'html' || $path_info['extension'] == 'xml')) {
 				//防止转义字符影响
-				if (isEscapeCharacter($file_name)) {
+				$full_path = correctPath($file_path.'\\'.$file_name);
+/* 				if (correctPath($file_name)) {
 					$full_path = $file_path.'\\\\'.$file_name;
 				} else {
 					$full_path = $file_path.'\\'.$file_name;
-				}
+				} */
 //				echo $full_path;
 //				echo '<br />';
 				$html->load_file($full_path);
@@ -247,10 +275,13 @@
 				
 			//	通过字符串重新载入清洗后的DOM对象
 				$html->load($div);
-				generateXML($html, $file_path, $path_info['filename'], $conf_path);
+//				echo '<XMP>'.$div.'</XMP>';
+				generateXML($html, $output_path, $path_info['filename'], $conf_path);
 			}
 		}
 	}
+	echo "<a href='index.php'>返回</a>";
+	
 
 	//	file_put_contents("cleaned.htm", $xml);
 	?>

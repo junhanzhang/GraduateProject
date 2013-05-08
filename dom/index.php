@@ -22,7 +22,7 @@
 			<br />
 			数据目录：<input type="text" name="dir_path" style="width:400px;" />（不填则默认读取ini配置文件中的路径）
 			<br />
-			输出目录：<input type="text" name="output_path" style="width:400px;" />（不填则默认存在数据目录中生成的XML文件中）
+			输出目录：<input type="text" name="output_path" style="width:400px;" />（不填则默认存在数据目录中生成的extract文件中）
 			<br />
 			<input type="submit" value="开始解析">
 		</form>'
