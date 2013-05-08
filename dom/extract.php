@@ -159,42 +159,46 @@
 		}
 		$tauthor = $html->find($str_author);
 		$author = trim($tauthor[0]->plaintext);	//trim清洗字符串
-		//分别从配置文件读取时间和博文
+		
+		//分别从配置文件读取博文和时间，要先读取博文，因为要清洗
+		//腾讯微博需要清洗转发博文（与正博文相同标签）
+		if ($conf['POST']['CLEAN'] != NULL) {
+			$clean = $html->find($conf['POST']['CLEAN']);
+//			echo '<XMP>'.$clean['0']->plaintext.'</XMP>';
+
+			foreach ($clean as $item) {
+				$item->outertext = '';
+			}
+
+		}
+
+//		echo '<XMP>'.$html.'</XMP>';
+//		echo '<br />';
+		$str_post = $conf['POST']['BEGIN'];
+		if ($conf['POST']['START'] != NULL) {
+			$str_post .= " ".$conf['POST']['START'];
+		}	
+		//需要新建一个DOM对象保存清除指定标签后的DOM对象
+
+		$ihtml = new simple_html_dom();
+		$ihtml->load($html);
+		$post = $ihtml->find($str_post);
+
+		foreach ($post as $item) {
+			echo '<XMP>'.$item->plaintext.'</XMP>';
+			echo '<br />';
+		}
+//		从配置文件读取时间
 		$str_time = $conf['TIME']['BEGIN'];
 		if ($conf['TIME']['START'] != NULL) {
 			$str_time .= " ".$conf['TIME']['START'];
 		}
-		$time = $html->find($str_time);
+		$time = $ihtml->find($str_time);
 		if ($conf['TIME']['ATTRIBUTE'] != NULL) {
 			$time_attr = $conf['TIME']['ATTRIBUTE'];
 		} else {
 			$time_attr = 'plaintext';
 		}
-		
-		//腾讯微博需要清洗转发博文（与正博文相同标签）
-		if ($conf['POST']['CLEAN'] != NULL) {
-			$clean = $html->find($conf['POST']['CLEAN']);
-			for ($j = 0; $j < count($clean); $j++) {
-				$clean[$j]->outertext = '';
-//				echo $clean[$j]->plaintext;
-				echo '<br />';
-				
-			}
-//			echo '<XMP>'.$clean['0']->plaintext.'</XMP>';
-
-			/* foreach ($clean as $item) {
-				
-				$item->outertext = '';
-				echo $item->plaintext;
-				echo '<br />';
-			} */
-		}
-		echo '<XMP>'.$html.'</XMP>';
-		$str_post = $conf['POST']['BEGIN'];
-		if ($conf['POST']['START'] != NULL) {
-			$str_post .= " ".$conf['POST']['START'];
-		}	
-		$post = $html->find($str_post);
 		
 	//	$result->outertext = iconv("GBK", "UTF-8", $result->outertext);
 
@@ -272,7 +276,7 @@
 			//	$div->outertext = iconv("GBK", "UTF-8", $div->outertext);
 				$indent = 0;
 				cleanHTML($div, $indent);
-				
+
 			//	通过字符串重新载入清洗后的DOM对象
 				$html->load($div);
 //				echo '<XMP>'.$div.'</XMP>';
