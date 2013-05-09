@@ -8,11 +8,12 @@
 	<body style="margin:0 0 0 0;">
 	<?php
 
-		if (isset($_POST["microblog"])) {
+	if (isset($_POST["microblog"])) {
 		$microblog = $_POST["microblog"];
 	} else {
 		$microblog = NULL;
-		alert('请选择抽取的微博');
+		echo "<script>alert('请选择抽取的微博')
+			location.href='index.php'</script>";
 	}
 //	配置文件路径\会转义要多加一个\
 	$conf_path = correctPath('.\conf\\'.$microblog.'.ini');
@@ -23,16 +24,16 @@
 	} */
 //	数据目录
 	if (isset($_POST["dir_path"]) && $_POST["dir_path"] != NULL) {
-		$file_path = $_POST["dir_path"];
+		$file_path = rtrim($_POST['dir_path'], '\\');
 	} else {
 		$conf = parse_ini_file($conf_path, true);
-		$file_path = $conf['FILE_PATH']['PATH'];
+		$file_path = rtrim($conf['FILE_PATH']['PATH'], '\\');
 	}
 //	输出目录	
 	if (isset($_POST['output_path']) && $_POST["output_path"] != NULL) {
-		$output_path = rtrim($_POST['output_path'], '\\');
+		$output_path = correctPath(rtrim($_POST['output_path'], '\\'));
 	} else {
-		$output_path = $file_path;
+		$output_path = correctPath(rtrim($file_path, '\\'));
 	}
 //	echo $output_path;
 //	生成目录
@@ -82,15 +83,15 @@
 			$node->innertext = str_replace("&nbsp;",'',$node->innertext);
 			$node->innertext = str_replace("&lt;",'',$node->innertext);
 			$node->innertext = str_replace("&gt;",'',$node->innertext);
-			//删除空白内容标签
-			if (trim($node->innertext) == '') {
+			//不能删除空白内容标签，若有博文只有表情或图片会丢失
+/* 			if (trim($node->innertext) == '') {
 				$node->outertext = '';
 				return;
-			}
+			} */
 			//SimpleXML解析有多个属性的a会有问题要清洗
 			//判断是否要去掉标签<a><em>，只留下<a><em>中内容
 			if (cleanTag($node)) {
-				$node->outertext = $node->innertext;
+				$node->outertext = trim($node->innertext);
 				return;
 			}
 /*  			if ($node->tag == 'a') {
@@ -107,7 +108,7 @@
 '.$node->innertext.'
 '.str_repeat(" ", $indent).'</'.$node->tag.'>'; */
 			$node->outertext = substr($node->outertext, 0, strpos($node->outertext, '>')+1).'
-'.$node->innertext.'
+'.trim($node->innertext).'
 '.'</'.$node->tag.'>';
 //	echo $node;
 		} else {
@@ -120,12 +121,12 @@
 			$node->innertext = str_replace("&nbsp;",'',$node->innertext);
 			$node->innertext = str_replace("&lt;",'',$node->innertext);
 			$node->innertext = str_replace("&gt;",'',$node->innertext);
-			if (trim($node->innertext) == '') {
+/* 			if (trim($node->innertext) == '') {
 				$node->outertext = '';
 				return;
-			}
+			} */
 			if (cleanTag($node)) {
-				$node->outertext = $node->innertext;
+				$node->outertext = trim($node->innertext);
 				return;
 			}
 
@@ -137,7 +138,7 @@
 '; */
 			$node->outertext = '
 '.substr($node->outertext, 0, strpos($node->outertext, '>')+1).'
-'.$node->innertext.'
+'.trim($node->innertext).'
 '.'</'.$node->tag.'>';
 //			echo $node;
 		}
@@ -182,12 +183,13 @@
 
 		$ihtml = new simple_html_dom();
 		$ihtml->load($html);
+//		file_put_contents("cleaned.htm", $html);
 		$post = $ihtml->find($str_post);
 
-		foreach ($post as $item) {
+/* 		foreach ($post as $item) {
 			echo '<XMP>'.$item->plaintext.'</XMP>';
 			echo '<br />';
-		}
+		} */
 //		从配置文件读取时间
 		$str_time = $conf['TIME']['BEGIN'];
 		if ($conf['TIME']['START'] != NULL) {
@@ -205,6 +207,9 @@
 	//	初始化输出到xml文件的字符串
 		$xml = "<Microblog>";
 		$indent = 0;
+		if (count($time) != count($post)) {
+			echo "注意时间与博文不匹配！\n";
+		}
 		for ($i = 0; $i < count($time); $i++) {
 			$xml .= "
 ".str_repeat(" ", $indent+4)."<record>";
@@ -251,41 +256,45 @@
 	include('simple_html_dom.php');
 	$html = new simple_html_dom();
 //	开始循环处理
-	$dir = opendir($file_path);
+	if (is_dir($file_path)) {
+		$dir = opendir($file_path);
+		while (($file_name = readdir($dir)) !== false) {
+			//readdir前两个返回的是.和..
+			if ($file_name != '.' && $file_name != '..') {
 
-	while (($file_name = readdir($dir)) !== false) {
-		//readdir前两个返回的是.和..
-		if ($file_name != '.' && $file_name != '..') {
+				$path_info = pathinfo($file_name);
 
-			$path_info = pathinfo($file_name);
+				//过滤只抽取指定后缀名文件
+				if (isset($path_info['extension']) && ($path_info['extension'] == 'htm' || $path_info['extension'] == 'html' || $path_info['extension'] == 'xml')) {
+					//防止转义字符影响
+					$full_path = correctPath($file_path.'\\'.$file_name);
+	/* 				if (correctPath($file_name)) {
+						$full_path = $file_path.'\\\\'.$file_name;
+					} else {
+						$full_path = $file_path.'\\'.$file_name;
+					} */
+	//				echo $full_path;
+	//				echo '<br />';
+					$html->load_file($full_path);
+			
+					$div = $html->find('body',0);
+				//	$div->outertext = iconv("GBK", "UTF-8", $div->outertext);
+					$indent = 0;
+					cleanHTML($div, $indent);
 
-			//过滤只抽取指定后缀名文件
-			if (isset($path_info['extension']) && ($path_info['extension'] == 'htm' || $path_info['extension'] == 'html' || $path_info['extension'] == 'xml')) {
-				//防止转义字符影响
-				$full_path = correctPath($file_path.'\\'.$file_name);
-/* 				if (correctPath($file_name)) {
-					$full_path = $file_path.'\\\\'.$file_name;
-				} else {
-					$full_path = $file_path.'\\'.$file_name;
-				} */
-//				echo $full_path;
-//				echo '<br />';
-				$html->load_file($full_path);
-		
-				$div = $html->find('body',0);
-			//	$div->outertext = iconv("GBK", "UTF-8", $div->outertext);
-				$indent = 0;
-				cleanHTML($div, $indent);
-
-			//	通过字符串重新载入清洗后的DOM对象
-				$html->load($div);
-//				echo '<XMP>'.$div.'</XMP>';
-				generateXML($html, $output_path, $path_info['filename'], $conf_path);
+				//	通过字符串重新载入清洗后的DOM对象
+					$html->load($div);
+	//				echo '<XMP>'.$div.'</XMP>';
+					generateXML($html, $output_path, $path_info['filename'], $conf_path);
+				}
 			}
 		}
+		echo "抽取成功，<a href='index.php'>返回</a>主页";
 	}
-	echo "<a href='index.php'>返回</a>";
-	
+	else {
+		echo "<script>alert('目录不存在')
+			location.href='index.php'</script>";
+	}
 
 	//	file_put_contents("cleaned.htm", $xml);
 	?>
