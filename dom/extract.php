@@ -8,6 +8,7 @@
 	<body style="margin:0 0 0 0;">
 	<?php
 
+	set_time_limit(0);
 	if (isset($_POST["microblog"])) {
 		$microblog = $_POST["microblog"];
 	} else {
