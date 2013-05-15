@@ -45,11 +45,11 @@
 			$node->innertext = str_replace("&nbsp;",'',$node->innertext);
 			$node->innertext = str_replace("&lt;",'',$node->innertext);
 			$node->innertext = str_replace("&gt;",'',$node->innertext);
-			//删除空白内容标签
-			if (trim($node->innertext) == '') {
+			//不能删除空白内容标签，若有博文只有表情或图片会丢失
+/* 			if (trim($node->innertext) == '') {
 				$node->outertext = '';
 				return;
-			}
+			} */
 			//SimpleXML解析有多个属性的a会有问题要清洗
 			//判断是否要去掉标签<a><em>，只留下<a><em>中内容
 			if (cleanTag($node)) {
@@ -83,12 +83,12 @@
 			$node->innertext = str_replace("&nbsp;",'',$node->innertext);
 			$node->innertext = str_replace("&lt;",'',$node->innertext);
 			$node->innertext = str_replace("&gt;",'',$node->innertext);
-			if (trim($node->innertext) == '') {
+/* 			if (trim($node->innertext) == '') {
 				$node->outertext = '';
 				return;
-			}
+			} */
 			if (cleanTag($node)) {
-				$node->outertext = $node->innertext;
+				$node->outertext = trim($node->innertext);
 				return;
 			}
 
