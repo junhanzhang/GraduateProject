@@ -10,7 +10,7 @@
 
 	include('simple_html_dom.php');
 	$html = new simple_html_dom();
-	$html->load_file('..\..\data\netease\\netease1.htm');
+	$html->load_file('..\..\data\sina\1.htm');
 
 	function deleteTag($node) {
 		//删除font、style、script、备注标签
@@ -65,13 +65,13 @@
 			}  */
 			
 			//重建标签有排版和无排版
-			/* $node->outertext = '
+			$node->outertext = '
 '.str_repeat(" ", $indent).substr($node->outertext, 0, strpos($node->outertext, '>')+1).'
 '.$node->innertext.'
-'.str_repeat(" ", $indent).'</'.$node->tag.'>'; */
-			$node->outertext = substr($node->outertext, 0, strpos($node->outertext, '>')+1).'
+'.str_repeat(" ", $indent).'</'.$node->tag.'>'; 
+/* 			$node->outertext = substr($node->outertext, 0, strpos($node->outertext, '>')+1).'
 '.$node->innertext.'
-'.'</'.$node->tag.'>';
+'.'</'.$node->tag.'>'; */
 //	echo $node;
 		} else {
 			$indent = $indent + 4;
@@ -93,15 +93,15 @@
 			}
 
 			//有排版和无排版
-			/* $node->outertext = '
+			$node->outertext = '
 '.str_repeat(" ", $indent).substr($node->outertext, 0, strpos($node->outertext, '>')+1).'
 '.str_repeat(" ", $indent+4).$node->innertext.'
 '.str_repeat(" ", $indent).'</'.$node->tag.'>'.'
-'; */
-			$node->outertext = '
+'; 
+/* 			$node->outertext = '
 '.substr($node->outertext, 0, strpos($node->outertext, '>')+1).'
 '.$node->innertext.'
-'.'</'.$node->tag.'>';
+'.'</'.$node->tag.'>'; */
 //			echo $node;
 		}
 	}
