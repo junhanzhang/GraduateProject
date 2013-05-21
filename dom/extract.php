@@ -41,7 +41,8 @@
 	$temp = correctPath($output_path.'\\extract');
 	if (!is_dir($temp))
 		mkdir($temp); 
-//	函数================================我是分割线================================ 
+//	函数
+//	================================我是分割线================================ 
 	//判断是否转义字符
 	function correctPath($str) {
 		$temp = $str;
@@ -49,7 +50,7 @@
 
 		return str_ireplace("\\n", "\\\\n", $temp);
 	}
-	function deleteTag($node) {
+	function isDeleteTag($node) {
 		//删除font、style、script、备注标签
 		if ($node->tag == 'font' || $node->tag == 'style' || $node->tag == 'script' || $node->tag == 'comment' || $node->tag == 'param' || $node->tag == 'img') {
 			return true;
@@ -57,8 +58,9 @@
 			return false;
 		}
 	}
-	
-	function cleanTag($node) {
+
+	//有些是不能直接删除，其标签是可能在博文内的，所以只需将标签外壳脱去
+	function isCleanTag($node) {
 		if ($node->tag == 's' || $node->tag == 'b') {
 			return true;
 		} else {
@@ -75,8 +77,8 @@
 			foreach ($node->children as $temp) {
 				cleanHTML($temp, $indent);
 			}
-			//判断是否垃圾标签，如style、script等
-			if (deleteTag($node)) {
+			//判断是否垃圾标签，如style、script等，直接删除
+			if (isDeleteTag($node)) {
 				$node->outertext = '';
 				return ;
 			}
@@ -91,7 +93,7 @@
 			} */
 			//SimpleXML解析有多个属性的a会有问题要清洗
 			//判断是否要去掉标签<a><em>，只留下<a><em>中内容
-			if (cleanTag($node)) {
+			if (isCleanTag($node)) {
 				$node->outertext = trim($node->innertext);
 				return;
 			}
@@ -114,7 +116,7 @@
 //	echo $node;
 		} else {
 			$indent = $indent + 4;
-			if (deleteTag($node)) {
+			if (isDeleteTag($node)) {
 				$node->outertext = '';
 				return ;
 			}
@@ -126,7 +128,7 @@
 				$node->outertext = '';
 				return;
 			} */
-			if (cleanTag($node)) {
+			if (isCleanTag($node)) {
 				$node->outertext = trim($node->innertext);
 				return;
 			}
@@ -180,8 +182,8 @@
 		if ($conf['POST']['START'] != NULL) {
 			$str_post .= " ".$conf['POST']['START'];
 		}	
+		
 		//需要新建一个DOM对象保存清除指定标签后的DOM对象
-
 		$ihtml = new simple_html_dom();
 		$ihtml->load($html);
 //		file_put_contents("cleaned.htm", $html);
